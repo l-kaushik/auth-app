@@ -1,0 +1,29 @@
+# Development version of configuration
+
+# Database connection
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authapp
+    username: postgres
+    password: postgres@123
+
+#    hikari:
+#      pool-name: HikariCP-Dev
+#      maximum-pool-size: 5
+#      minimum-idle: 2
+#      connection-timeout: 20000
+#      idle-timeout: 120000
+#      max-lifetime: 900000
+#      validation-timeout: 3000
+#      leak-detection-threshold: 2000
+#      initialization-fail-timeout: -1
+
+# JPA and Hibernate configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
