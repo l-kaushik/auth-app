@@ -3,6 +3,7 @@ package in.lokeshkaushik.authapp.services;
 import in.lokeshkaushik.authapp.dtos.UserDto;
 import in.lokeshkaushik.authapp.entities.Provider;
 import in.lokeshkaushik.authapp.entities.User;
+import in.lokeshkaushik.authapp.exceptions.ResourceNotFoundException;
 import in.lokeshkaushik.authapp.mapper.UserMapper;
 import in.lokeshkaushik.authapp.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,10 @@ public class UserServiceImpl implements UserService {
     public UserDto createUser(UserDto userDto) {
 
         if(userDto.email() == null || userDto.email().isBlank())
-            throw new IllegalArgumentException("Invalid email provided");
+            throw new IllegalArgumentException("Email is required");
 
         if(userRepository.existsByEmail(userDto.email()))
-            throw new IllegalArgumentException("Email already exists");
+            throw new IllegalArgumentException("User with given email already exists");
 
         User user = userMapper.toEntity(userDto);
         user.setProvider(userDto.provider() != null ? userDto.provider() : Provider.LOCAL);
@@ -39,7 +40,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDto getUserByEmail(String email) {
-        return null;
+
+        User user = userRepository.findByEmail(email).orElseThrow(
+                () -> new ResourceNotFoundException("User not found with given EmailId"));
+
+        return userMapper.toDto(user);
     }
 
     @Override
