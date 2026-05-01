@@ -6,6 +6,7 @@ import in.lokeshkaushik.authapp.entities.User;
 import in.lokeshkaushik.authapp.exceptions.ResourceNotFoundException;
 import in.lokeshkaushik.authapp.mapper.UserMapper;
 import in.lokeshkaushik.authapp.repositories.UserRepository;
+import in.lokeshkaushik.authapp.utils.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,18 +49,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto updateUser(UserDto userDto, String userId) {
-        return null;
+        User existingUser = getUserObjectById(userId);
+
+        if(userDto.name() != null) existingUser.setName(userDto.name());
+        if(userDto.image() != null) existingUser.setImage(userDto.image());
+        if(userDto.provider() != null) existingUser.setProvider(userDto.provider());
+        // TODO: Implement with encryption
+        if(userDto.password() != null && !existingUser.getPassword().equals(userDto.password())) existingUser.setPassword(userDto.password());
+        existingUser.setEnable(userDto.enable());
+
+        return userMapper.toDto(userRepository.save(existingUser));
     }
 
     @Override
+    @Transactional
     public void deleteUser(String userId) {
-
+        User user = getUserObjectById(userId);
+        userRepository.delete(user);
     }
 
     @Override
     public UserDto getUserById(String userId) {
-        return null;
+        User user = getUserObjectById(userId);
+        return userMapper.toDto(user);
+    }
+
+    private User getUserObjectById(String userId) {
+        return userRepository.findById(UserHelper.parseUUID(userId)).orElseThrow(
+                () -> new ResourceNotFoundException("User not found with given Id")
+        );
     }
 
     @Override

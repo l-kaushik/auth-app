@@ -19,13 +19,25 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(userDto));
     }
 
+    // TODO: shouldn't be public
+
     @GetMapping
     public ResponseEntity<Iterable<UserDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/email/{email}")
-    public ResponseEntity<UserDto> getUser(@PathVariable String email) {
+    public ResponseEntity<UserDto> getUser(@PathVariable("email") String email) {
         return ResponseEntity.ok(userService.getUserByEmail(email));
+    }
+
+    @DeleteMapping("/{userId}")
+    public void deleteUser(@PathVariable("userId") String userId){
+        userService.deleteUser(userId);
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<UserDto> updateUser(@RequestBody UserDto userDto, @PathVariable("userId") String userId){
+        return ResponseEntity.ok(userService.updateUser(userDto, userId ));
     }
 }
