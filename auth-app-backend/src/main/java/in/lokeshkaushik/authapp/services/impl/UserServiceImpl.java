@@ -1,4 +1,4 @@
-package in.lokeshkaushik.authapp.services;
+package in.lokeshkaushik.authapp.services.impl;
 
 import in.lokeshkaushik.authapp.dtos.UserDto;
 import in.lokeshkaushik.authapp.entities.Provider;
@@ -6,6 +6,7 @@ import in.lokeshkaushik.authapp.entities.User;
 import in.lokeshkaushik.authapp.exceptions.ResourceNotFoundException;
 import in.lokeshkaushik.authapp.mapper.UserMapper;
 import in.lokeshkaushik.authapp.repositories.UserRepository;
+import in.lokeshkaushik.authapp.services.UserService;
 import in.lokeshkaushik.authapp.utils.UserHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
