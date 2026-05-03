@@ -9,6 +9,7 @@ import in.lokeshkaushik.authapp.repositories.UserRepository;
 import in.lokeshkaushik.authapp.services.UserService;
 import in.lokeshkaushik.authapp.utils.UserHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -31,6 +33,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userMapper.toEntity(userDto);
         user.setProvider(userDto.provider() != null ? userDto.provider() : Provider.LOCAL);
+        user.setPassword(encodePassword(userDto.password()));
 
         // TODO: role assign here to user for authorization
 
@@ -81,6 +84,10 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(UserHelper.parseUUID(userId)).orElseThrow(
                 () -> new ResourceNotFoundException("User not found with given Id")
         );
+    }
+
+    private String encodePassword(String password) {
+        return passwordEncoder.encode(password);
     }
 
     @Override
