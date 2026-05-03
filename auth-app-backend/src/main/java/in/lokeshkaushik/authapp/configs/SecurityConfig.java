@@ -1,5 +1,6 @@
 package in.lokeshkaushik.authapp.configs;
 
+import in.lokeshkaushik.authapp.dtos.ApiError;
 import in.lokeshkaushik.authapp.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -7,7 +8,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -46,17 +49,20 @@ public class SecurityConfig {
                    logger.error(e.getMessage());
                     response.setStatus(401);
                     response.setContentType("application/json");
-                    String message = " unauthorized access " + e.getMessage();
-                    Map<String, String> errorMap = Map.of(
-                            "message", message,
-                            "status", HttpStatus.UNAUTHORIZED.toString());
+                    String error = request.getAttribute("error").toString();
+                    String message = error != null ? error : e.getMessage();
                     var objectMapper = new ObjectMapper();
-                    response.getWriter().write(objectMapper.writeValueAsString(errorMap));
+                    var apiError = ApiError.of(HttpStatus.UNAUTHORIZED.toString(), message, request.getRequestURI());
+                    response.getWriter().write(objectMapper.writeValueAsString(apiError));
                 }))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
