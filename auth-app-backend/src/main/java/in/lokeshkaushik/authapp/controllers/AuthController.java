@@ -4,6 +4,7 @@ import in.lokeshkaushik.authapp.dtos.LoginRequest;
 import in.lokeshkaushik.authapp.dtos.TokenResponse;
 import in.lokeshkaushik.authapp.dtos.UserDto;
 import in.lokeshkaushik.authapp.services.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +21,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest) {
-         return ResponseEntity.ok(authService.loginUser(loginRequest));
+    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+         return ResponseEntity.ok(authService.loginUser(loginRequest, response));
     }
 
     @PostMapping("/register")
