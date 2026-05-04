@@ -28,6 +28,21 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+# oauth 2 configurations
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:TEST_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET:TEST_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+              - openid
+
+
 logging:
   level:
     org.springframework.security: DEBUG

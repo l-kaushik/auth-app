@@ -2,6 +2,7 @@ package in.lokeshkaushik.authapp.configs;
 
 import in.lokeshkaushik.authapp.dtos.ApiError;
 import in.lokeshkaushik.authapp.security.JwtAuthenticationFilter;
+import in.lokeshkaushik.authapp.security.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +19,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -30,6 +30,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+    private final AuthenticationSuccessHandler successHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
@@ -46,6 +47,14 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/auth/logout").permitAll()
                                 .anyRequest().authenticated()
                 )
+
+                // NOTE: Frontend will access through this url http://localhost:8080/oauth2/authorization/google
+                
+                .oauth2Login(oauth2 ->
+                        oauth2.successHandler(successHandler)
+                                .failureHandler(null)
+                )
+                .logout(AbstractHttpConfigurer::disable)
                 .exceptionHandling( ex -> ex.authenticationEntryPoint((request, response, e) -> {
                     // error message
                    logger.error(e.getMessage());
