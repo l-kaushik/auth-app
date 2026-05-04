@@ -62,6 +62,9 @@ public class JwtService {
                 .compact();
     }
 
+    // TODO: Add token_version in claims section and on issuing a new access token increment it by 1, and during checks,
+    //  check access token version against user stored token_version to make sure user only access when it is logged in.
+
     public String generateRefreshToken(User user, String jti) {
         Instant now = Instant.now();
         List<String> roles = user.getRoles() == null ? List.of() :
