@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -30,6 +31,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtService jwtService;
     private final CookieService cookieService;
     private final RefreshTokenRepository refreshTokenRepository;
+
+    @Value("${app.auth.frontend.success-redirect}")
+    private String frontEndSuccessUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -51,6 +55,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         User user;
 
+        // TODO: handle null email case
+
         switch (registrationId) {
             case "google" -> {
                 String googleId = oAuth2User.getAttributes().getOrDefault("sub", "").toString();
@@ -59,19 +65,33 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 String name = oAuth2User.getAttributes().getOrDefault("name", "").toString();
                 String picture = oAuth2User.getAttributes().getOrDefault("picture", "").toString();
 
-                user = User.builder()
+                User newUser = User.builder()
                         .email(email)
                         .name(name)
                         .image(picture)
                         .provider(Provider.GOOGLE)
+                        .providerId(googleId)
                         .build();
 
-                userRepository.findByEmail(email).ifPresentOrElse(user1 -> {
-                    logger.info("user is there in database");
-                    logger.info(user1.toString());
-                }, () -> {
-                    userRepository.save(user);
-                });
+                user = userRepository.findByEmail(email).orElseGet(() -> userRepository.save(newUser));
+            }
+
+            case "github" -> {
+                String githubId = oAuth2User.getAttributes().getOrDefault("id", "").toString();
+
+                String name = oAuth2User.getAttributes().getOrDefault("login", "").toString();
+                String email = oAuth2User.getAttributes().getOrDefault("email", "").toString();
+                String image = oAuth2User.getAttributes().getOrDefault("avatar_url", "").toString();
+
+                User newUser = User.builder()
+                        .email(email)
+                        .name(name)
+                        .image(image)
+                        .provider(Provider.GITHUB)
+                        .providerId(githubId)
+                        .build();
+
+                user = userRepository.findByEmail(email).orElseGet(() -> userRepository.save(newUser));
             }
 
             default -> {
@@ -82,6 +102,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         // get data
         // create new user
         // redirect to frontend
+
+        // revoke all refresh tokens
 
         String jti = UUID.randomUUID().toString();
         RefreshToken refreshTokenObj = RefreshToken.builder()
@@ -99,6 +121,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         cookieService.attachRefreshCookie(response, refreshToken, (int) jwtService.getRefreshTtlSeconds());
 
-        response.getWriter().write("Login successful");
+//        response.getWriter().write("Login successful");
+        response.sendRedirect(frontEndSuccessUrl);
     }
 }

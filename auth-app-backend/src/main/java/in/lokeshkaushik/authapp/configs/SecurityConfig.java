@@ -60,7 +60,7 @@ public class SecurityConfig {
                    logger.error(e.getMessage());
                     response.setStatus(401);
                     response.setContentType("application/json");
-                    String error = request.getAttribute("error").toString();
+                    String error = request.getAttribute("error") != null ? toString() : null;
                     String message = error != null ? error : e.getMessage();
                     var objectMapper = new ObjectMapper();
                     var apiError = ApiError.of(HttpStatus.UNAUTHORIZED.toString(), message, request.getRequestURI());
