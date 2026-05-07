@@ -1,5 +1,6 @@
 package in.lokeshkaushik.authapp.services.impl;
 
+import com.fasterxml.uuid.Generators;
 import in.lokeshkaushik.authapp.dtos.LoginRequest;
 import in.lokeshkaushik.authapp.dtos.RefreshTokenRequest;
 import in.lokeshkaushik.authapp.dtos.TokenResponse;
@@ -66,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
             throw new DisabledException("User is disabled");
         }
 
-        String jti = UUID.randomUUID().toString();
+        String jti = Generators.timeBasedEpochGenerator().generate().toString();
         var refreshTokenObject = RefreshToken.builder()
                 .jti(jti)
                 .user(user)
@@ -120,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
 
         // rotate refresh token
         storedRefreshToken.setRevoked(true);
-        String newJti = UUID.randomUUID().toString();
+        String newJti = Generators.timeBasedEpochGenerator().generate().toString();
         storedRefreshToken.setReplacedByToken(newJti);
         refreshTokenRepository.save(storedRefreshToken);
 

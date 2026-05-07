@@ -1,5 +1,6 @@
 package in.lokeshkaushik.authapp.security;
 
+import com.fasterxml.uuid.Generators;
 import in.lokeshkaushik.authapp.entities.Role;
 import in.lokeshkaushik.authapp.entities.User;
 import io.jsonwebtoken.Claims;
@@ -48,7 +49,7 @@ public class JwtService {
         List<String> roles = user.getRoles() == null ? List.of() :
                 user.getRoles().stream().map(Role::getName).toList();
         return Jwts.builder()
-                .id(UUID.randomUUID().toString())
+                .id(Generators.timeBasedEpochGenerator().generate().toString())
                 .subject(user.getId().toString())
                 .issuer(issuer)
                 .issuedAt(Date.from(now))

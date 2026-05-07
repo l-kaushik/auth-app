@@ -1,9 +1,7 @@
 package in.lokeshkaushik.authapp.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.uuid.Generators;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
@@ -18,7 +16,16 @@ import java.util.UUID;
 @Table(name = "roles")
 public class Role {
     @Id
-    private UUID id = UUID.randomUUID();
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
     @Column(unique = true, nullable = false)
     private String name;
+
+    @PrePersist
+    public void generateId() {
+        if(id == null) {
+            id = Generators.timeBasedEpochGenerator().generate();
+        }
+    }
 }

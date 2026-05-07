@@ -1,5 +1,6 @@
 package in.lokeshkaushik.authapp.security;
 
+import com.fasterxml.uuid.Generators;
 import in.lokeshkaushik.authapp.entities.Provider;
 import in.lokeshkaushik.authapp.entities.RefreshToken;
 import in.lokeshkaushik.authapp.entities.User;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -105,7 +105,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         // revoke all refresh tokens
 
-        String jti = UUID.randomUUID().toString();
+        String jti = Generators.timeBasedEpochGenerator().generate().toString();
         RefreshToken refreshTokenObj = RefreshToken.builder()
                                         .jti(jti)
                                         .user(user)

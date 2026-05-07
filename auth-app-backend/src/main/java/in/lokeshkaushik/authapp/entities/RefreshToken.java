@@ -1,5 +1,6 @@
 package in.lokeshkaushik.authapp.entities;
 
+import com.fasterxml.uuid.Generators;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Builder
 public class RefreshToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
     private UUID id;
 
     @Column(name = "jti", unique = true, nullable = false, updatable = false)
@@ -38,4 +39,11 @@ public class RefreshToken {
     private boolean revoked;
 
     private String replacedByToken;
+
+    @PrePersist
+    public void generateId() {
+        if(id == null) {
+            id = Generators.timeBasedEpochGenerator().generate();
+        }
+    }
 }

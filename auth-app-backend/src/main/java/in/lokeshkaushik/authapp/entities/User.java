@@ -1,5 +1,6 @@
 package in.lokeshkaushik.authapp.entities;
 
+import com.fasterxml.uuid.Generators;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,7 +21,7 @@ import java.util.*;
 @Table(name = "users")
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
     private UUID id;
     @Column(unique = true)
     private String email;
@@ -45,10 +46,17 @@ public class User implements UserDetails {
     private Set<Role> roles = new HashSet<>();
 
     @PrePersist
-    protected void onCreate() {
+    protected void prePersist() {
+
+        // creation timestamp
         Instant now = Instant.now();
         if(createdAt == null) createdAt = now;
         updatedAt = now;
+
+        // generate id
+        if(id == null) {
+            id = Generators.timeBasedEpochGenerator().generate();
+        }
     }
 
     @PreUpdate
