@@ -3,15 +3,19 @@ package in.lokeshkaushik.authapp.configs;
 import in.lokeshkaushik.authapp.dtos.ApiError;
 import in.lokeshkaushik.authapp.security.JwtAuthenticationFilter;
 import in.lokeshkaushik.authapp.security.OAuth2SuccessHandler;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,9 +27,12 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -42,6 +49,8 @@ public class SecurityConfig {
                 authorizeHttpRequest ->
                         authorizeHttpRequest
                                 .requestMatchers(AppConstants.AUTH_PUBLIC_URLS).permitAll()
+                                .requestMatchers(HttpMethod.GET).hasRole(AppConstants.GUEST_ROLE)
+                                .requestMatchers("/api/v1/users/**").hasRole(AppConstants.ADMIN_ROLE)
                                 .anyRequest().authenticated()
                 )
 
@@ -52,19 +61,28 @@ public class SecurityConfig {
                                 .failureHandler(null)
                 )
                 .logout(AbstractHttpConfigurer::disable)
-                .exceptionHandling( ex -> ex.authenticationEntryPoint((request, response, e) -> {
-                    // error message
-                   logger.error(e.getMessage());
-                    response.setStatus(401);
-                    response.setContentType("application/json");
-                    String error = request.getAttribute("error") != null ? toString() : null;
-                    String message = error != null ? error : e.getMessage();
-                    var objectMapper = new ObjectMapper();
-                    var apiError = ApiError.of(HttpStatus.UNAUTHORIZED.toString(), message, request.getRequestURI());
-                    response.getWriter().write(objectMapper.writeValueAsString(apiError));
-                }))
+                .exceptionHandling( ex -> ex.authenticationEntryPoint((request, response, authenticationException) -> {
+                    filterChainExceptionHandler(401, authenticationException, request, response, HttpStatus.UNAUTHORIZED.toString());
+                }).accessDeniedHandler((request, response, accessDeniedException) -> {
+                            filterChainExceptionHandler(403, accessDeniedException, request, response, HttpStatus.FORBIDDEN.toString());
+                        })
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    private void filterChainExceptionHandler(int status, Exception ex, HttpServletRequest request, HttpServletResponse response, String httpStatus) throws IOException {
+        logger.error(ex.getMessage());
+        response.setStatus(status);
+        response.setContentType("application/json");
+        String error = request.getAttribute("error") != null
+                ? request.getAttribute("error").toString()
+                : null;
+        String message = error != null ? error : ex.getMessage();
+        System.out.println(message);
+        var objectMapper = new ObjectMapper();
+        var apiError = ApiError.of(httpStatus, message, request.getRequestURI());
+        response.getWriter().write(objectMapper.writeValueAsString(apiError));
     }
 
     @Bean

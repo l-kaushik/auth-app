@@ -1,10 +1,13 @@
 package in.lokeshkaushik.authapp.services.impl;
 
+import in.lokeshkaushik.authapp.configs.AppConstants;
 import in.lokeshkaushik.authapp.dtos.UserDto;
 import in.lokeshkaushik.authapp.entities.Provider;
+import in.lokeshkaushik.authapp.entities.Role;
 import in.lokeshkaushik.authapp.entities.User;
 import in.lokeshkaushik.authapp.exceptions.ResourceNotFoundException;
 import in.lokeshkaushik.authapp.mapper.UserMapper;
+import in.lokeshkaushik.authapp.repositories.RoleRepository;
 import in.lokeshkaushik.authapp.repositories.UserRepository;
 import in.lokeshkaushik.authapp.services.UserService;
 import in.lokeshkaushik.authapp.utils.UserHelper;
@@ -13,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -20,6 +25,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     @Override
     @Transactional
@@ -36,6 +42,9 @@ public class UserServiceImpl implements UserService {
         user.setPassword(encodePassword(userDto.password()));
 
         // TODO: role assign here to user for authorization
+        Role role = roleRepository.findByName("ROLE_" + AppConstants.GUEST_ROLE).orElse(null);
+        if(user.getRoles() == null) user.setRoles(new HashSet<>());
+        user.getRoles().add(role);
 
         User savedUser = userRepository.save(user);
 
